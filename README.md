@@ -10,5 +10,12 @@ u can create a new world with that
 - ✨FONTS ASCII ✨
 
 ```sh
-pip install new_ascii_art
+pip install news_ascii_art
+```
+news_ascii_art.ascii_art(font, text)
+Exemple:
+```python
+import news_ascii_art
+naa = news_ascii_art.ascii_art("graffiti", "Hello World")
+print(naa)
 ```
