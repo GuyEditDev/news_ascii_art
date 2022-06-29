@@ -1,1 +1,1 @@
-from news_ascii_art.new_ascii_art import initialize,ascii_art
+from .news_ascii_folder import *
